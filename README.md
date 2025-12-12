@@ -1,6 +1,8 @@
 # Packet Sniffer
 
 A real-time network traffic analyzer with a beautiful terminal dashboard.
+<img width="1257" height="697" alt="image" src="https://github.com/user-attachments/assets/ecceedc4-5d41-4f9c-b457-5c9c401d2d31" />
+<img width="1363" height="748" alt="image" src="https://github.com/user-attachments/assets/152f7e78-1501-4e73-9aa4-48801a121ea1" />
 
 ## Features
 - 📊 Live protocol distribution analysis
