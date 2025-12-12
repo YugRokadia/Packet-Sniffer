@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# C++ build artifacts
+*.o
+*.out
+*.a
+*.so
+*.exe
+capture_engine
+
+# Logs and runtime files
+*.log
+packet_sniffer.log
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python virtual environments
+venv/
+env/
+
+# Installer artifacts
+*.zip
+*.tar.gz
+
+# Desktop entry (if generated)
+packet-sniffer.desktop
+
+# Misc
+*.swp
+*~

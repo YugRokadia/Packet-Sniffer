@@ -1,0 +1,16 @@
+1. IPv6 needs a bit more enhancement
+
+
+1. JSON Escaping (Low Priority)
+Impact: Malformed/malicious SNI could break downstream parsers
+Likelihood: Very low (SNI validated by TLS servers)
+Fix Needed: Only if feeding untrusted data to strict parsers
+
+2. Buffer Size (Low Priority)
+Impact: Truncates jumbo frames (>8KB packets)
+Likelihood: Rare on standard networks
+Better Value: 65535 for full MTU support
+
+3. No Signal Handler (Low Priority)
+Impact: Minimal (OS handles cleanup)
+Professional Touch: Add for production deployments
