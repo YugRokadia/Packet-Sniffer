@@ -1,20 +1,20 @@
 # Packet Sniffer
 
-A real-time network packet sniffer and traffic analyzer with a beautiful terminal dashboard.
+A network packet sniffer and traffic analyzer with a beautiful terminal dashboard.
 <img width="1257" height="697" alt="image" src="https://github.com/user-attachments/assets/ecceedc4-5d41-4f9c-b457-5c9c401d2d31" />
 <img width="1257" height="688" alt="image" src="https://github.com/user-attachments/assets/4c51d1bc-d4c3-41af-a3ae-698fd82b601e" />
 
 ## Features
-- 📊 Live protocol distribution analysis
-- 🔝 Top talkers by traffic volume
-- 🌐 HTTPS domain tracking (SNI extraction)
-- 🔎 DNS query monitoring
-- 📡 Recent packet stream
-- 🔒 Security alerts (DNS tunneling, unencrypted protocols)
-- 📄 Raw packet logs with live viewer
-- 🎮 Interactive split-screen mode (up to 4 panels)
-- ⏯️ Pause/Resume functionality
-- 🎨 Beautiful Rich terminal UI
+- Live protocol distribution analysis
+- Top talkers by traffic volume
+- HTTPS domain tracking (SNI extraction)
+- DNS query monitoring
+- Recent packet stream
+- Security alerts (DNS tunneling, unencrypted protocols)
+- Raw packet logs with live viewer
+- Interactive split-screen mode (up to 4 panels)
+- Pause/Resume functionality
+- Beautiful Rich terminal UI
 
 ## Installation
 
@@ -110,10 +110,10 @@ Current alerts:
 
 ## Compatibility
 
-- ✅ Ubuntu/Debian/Mint
-- ✅ Fedora/RHEL/CentOS
-- ✅ Arch Linux
-- ✅ Raspberry Pi
+- Ubuntu/Debian/Mint
+- Fedora/RHEL/CentOS
+- Arch Linux
+- Raspberry Pi
 - ⚠️ Windows - Use WSL2
 - ⚠️ macOS - Requires modifications
 
