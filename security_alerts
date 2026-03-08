@@ -999,7 +999,7 @@ def main():
     except Exception as e:
         console.print(f"[bold red]Error: {e}[/bold red]")
         import traceback
-        traceback.print_exc()
+        traceback.print_exc() 
 
 if __name__ == '__main__':
     main()
