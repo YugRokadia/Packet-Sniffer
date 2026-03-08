@@ -528,54 +528,73 @@ def create_recent_activity(analyzer, expanded=False):
     return Panel(table, border_style="green")
 
 def create_security_alerts(analyzer):
-    """Create security alerts panel"""
-    layout = Layout()
-    
-    # Alerts table
-    table = Table(show_header=True, header_style="bold red", expand=True)
-    table.add_column("Time", style="dim", width=8)
-    table.add_column("Type", style="red", width=15)
-    table.add_column("Alert Message", style="yellow")
-    
+    """Create security alerts panel with conditions + fired alerts side by side"""
+
+    # --- All 12 conditions with trigger instructions ---
+    all_conditions = [
+        ("DNS_TUNNEL",   "DNS query > 50 chars",              "nslookup " + "a"*55 + ".example.com"),
+        ("UNENCRYPTED",  "FTP/HTTP/POP3/IMAP/SMTP traffic",   "curl http://example.com  OR  ftp ftp.example.com"),
+        ("PORT_SCAN",    ">15 ports on one host in 60s",       "nmap -sS <target_ip>"),
+        ("ARP_FLOOD",    ">50 ARP packets in 10s",            "arpspoof -i eth0 -t <target> <gateway>"),
+        ("ICMP_FLOOD",   ">100 ICMP packets in 10s",          "ping -f <target_ip>  (flood ping)"),
+        ("DNS_EXFIL",    ">5 subdomain levels / label >40ch", "nslookup a.b.c.d.e.f.g.example.com"),
+        ("LARGE_PKT",    "Packet > 65535 bytes",              "ping -s 65500 <target_ip>"),
+        ("SUSPECT_PORT", "Known malicious port (4444,1337…)",  "ncat -lvp 4444  (Metasploit default)"),
+        ("DGA_SUSPECT",  ">2 unique DNS domains/sec",         "Run DGA script querying random domains"),
+        ("DNS_NON_STD",  "DNS on port other than 53",         "dig @<ip> -p 5354 example.com"),
+        ("DB_ACCESS",    "MySQL/PostgreSQL traffic",          "mysql -h <target> -u root  OR  psql -h <target>"),
+        ("RDP_DETECTED", "RDP (port 3389) session",           "xfreerdp /v:<target>  OR  rdesktop <target>"),
+    ]
+
+    # Count how many times each type has fired
+    fired_counts = Counter(a['type'] for a in analyzer.alerts)
+
+    # LEFT: Conditions table
+    cond_table = Table(show_header=True, header_style="bold cyan", expand=True,
+                       title="🛡️ All 12 Conditions")
+    cond_table.add_column("#", style="dim", width=3)
+    cond_table.add_column("Condition", style="cyan", width=14)
+    cond_table.add_column("Trigger Rule", style="dim", width=28, overflow="fold")
+    cond_table.add_column("Status", justify="center", width=6)
+    cond_table.add_column("Hits", justify="right", style="yellow", width=5)
+    cond_table.add_column("How to Trigger", style="green", overflow="fold")
+
+    for i, (name, rule, how) in enumerate(all_conditions, 1):
+        count = fired_counts.get(name, 0)
+        if count > 0:
+            status = Text("🔴", style="bold red")
+        else:
+            status = Text("—", style="dim")
+        cond_table.add_row(str(i), name, rule, status, str(count), how)
+
+    # RIGHT: Live fired alerts feed
+    feed_table = Table(show_header=True, header_style="bold red", expand=True,
+                       title="📜 Recent Fired Alerts")
+    feed_table.add_column("Time", style="dim", width=8)
+    feed_table.add_column("Type", style="red", width=14)
+    feed_table.add_column("Alert Message", style="yellow", overflow="fold")
+
     if not analyzer.alerts:
-        return Panel(
-            Text("✅ No security alerts detected", style="green"),
-            title="🔒 Security Alerts",
-            border_style="red"
-        )
-    
-    for alert in list(analyzer.alerts)[-20:]:
-        table.add_row(
-            alert['time'],
-            alert['type'],
-            alert['msg']
-        )
-    
-    # Flagged IPs table
-    if analyzer.flagged_ips:
-        ip_table = Table(show_header=True, header_style="bold magenta", expand=True)
-        ip_table.add_column("Flagged IP", style="red", width=20)
-        ip_table.add_column("Alerts", style="yellow", width=8)
-        ip_table.add_column("Severity", style="bold", width=10)
-        
-        for ip, count in analyzer.flagged_ips.most_common(10):
-            if count >= 5:
-                severity = Text("HIGH", style="bold red")
-            elif count >= 3:
-                severity = Text("MEDIUM", style="bold yellow")
-            else:
-                severity = Text("LOW", style="dim green")
-            ip_table.add_row(ip, str(count), severity)
-        
-        layout.split_column(
-            Layout(Panel(table, title=f"🔒 Alerts ({len(analyzer.alerts)})", border_style="red"), ratio=3),
-            Layout(Panel(ip_table, title="⚠️ Flagged IPs (by alert count)", border_style="magenta"), ratio=1),
-        )
-        return Panel(layout, title=f"🔒 Security Alerts ({len(analyzer.alerts)})", border_style="red")
-    
+        feed_table.add_row("", "", Text("✅ No alerts fired yet", style="green"))
+    else:
+        for alert in list(analyzer.alerts)[-25:]:
+            feed_table.add_row(alert['time'], alert['type'], alert['msg'])
+
+    # Side-by-side layout
+    grid = Table.grid(expand=True)
+    grid.add_column(ratio=1)
+    grid.add_column(ratio=1)
+    grid.add_row(
+        Panel(cond_table, border_style="cyan"),
+        Panel(feed_table, border_style="red")
+    )
+
+    flagged_count = len(analyzer.flagged_ips)
     alert_count = len(analyzer.alerts)
     title = f"🔒 Security Alerts ({alert_count})"
-    return Panel(table, title=title, border_style="red")
+    if flagged_count > 0:
+        title += f" | ⚠️ {flagged_count} Flagged IPs — Press [9] to view"
+    return Panel(grid, title=title, border_style="red")
 
 def create_flagged_ips(analyzer):
     """Create full-screen flagged IPs panel sorted by alert count"""
