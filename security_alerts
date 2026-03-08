@@ -883,7 +883,11 @@ def main():
             try:
                 tty.setcbreak(sys.stdin.fileno())
                 
+                last_render = 0
+                render_interval = 0.25  # Render dashboard 4x/sec
+                
                 while True:
+                    # --- Fast loop: handle keys + ingest packets (no rendering) ---
                     # Check for keyboard input (non-blocking)
                     if select.select([sys.stdin], [], [], 0)[0]:
                         key = sys.stdin.read(1)
@@ -952,20 +956,29 @@ def main():
                         
                         elif key.lower() == 'q':
                             raise KeyboardInterrupt
-                    
-                    # Read packet data
-                    if select.select([process.stdout], [], [], 0)[0]:
-                        line = process.stdout.readline()
-                        if not line:
-                            break
                         
-                        # Only process packets if not paused
-                        if line.strip().startswith('{') and not paused:
-                            analyzer.add_packet(line.strip())
+                        # Force immediate render after key press
+                        last_render = 0
                     
-                    # Update display
-                    update_dashboard(layout, analyzer)
-                    time.sleep(0.05)  # Small delay to prevent CPU spinning
+                    # Read packet data (drain multiple lines per loop to avoid backlog)
+                    for _ in range(50):
+                        if select.select([process.stdout], [], [], 0)[0]:
+                            line = process.stdout.readline()
+                            if not line:
+                                break
+                            # Only process packets if not paused
+                            if line.strip().startswith('{') and not paused:
+                                analyzer.add_packet(line.strip())
+                        else:
+                            break
+                    
+                    # --- Throttled render: only rebuild layout periodically ---
+                    now = time.time()
+                    if now - last_render >= render_interval:
+                        update_dashboard(layout, analyzer)
+                        last_render = now
+                    
+                    time.sleep(0.01)  # 10ms poll — responsive keys, low CPU
                     
             finally:
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
