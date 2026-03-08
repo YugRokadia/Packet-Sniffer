@@ -67,7 +67,10 @@ class PacketAnalyzer:
         self._syn_tracker = defaultdict(list)            # dst_ip -> [timestamps] for SYN flood
         self._alerted_scans = set()                      # IPs already alerted for port scan
         self._alerted_protocols = set()                  # Protocols already alerted as unencrypted
-        self._large_packet_threshold = 9000              # Jumbo frame / unusually large packet
+        self._large_packet_threshold = 65535              # Only flag truly abnormal packets
+        self._alert_cooldowns = {}                       # (alert_type, key) -> last_alert_timestamp
+        self._cooldown_seconds = 60                      # Min seconds between same alert
+        self._alerted_connections = set()                 # (type, src, dst) already alerted once
         self.flagged_ips = Counter()                      # IPs flagged with alert count
         
         # Performance metrics
@@ -140,8 +143,15 @@ class PacketAnalyzer:
         if ip:
             self.flagged_ips[ip] += 1
 
-    def _add_alert(self, now, alert_type, msg, involved_ip=None):
-        """Add a security alert and flag the involved IP"""
+    def _add_alert(self, now, alert_type, msg, involved_ip=None, cooldown_key=None):
+        """Add a security alert with optional cooldown to prevent spam"""
+        # Rate-limit: skip if same (type, key) fired recently
+        if cooldown_key:
+            ck = (alert_type, cooldown_key)
+            last = self._alert_cooldowns.get(ck, 0)
+            if time.time() - last < self._cooldown_seconds:
+                return
+            self._alert_cooldowns[ck] = time.time()
         self.alerts.append({'time': now, 'type': alert_type, 'msg': msg})
         if involved_ip:
             self._flag_ip(involved_ip, alert_type)
@@ -159,8 +169,12 @@ class PacketAnalyzer:
 
         # 1. DNS tunneling detection (very long domains)
         if 'dns_query' in pkt and len(pkt['dns_query']) > 50:
-            self._add_alert(now, 'DNS_TUNNEL',
-                f"Suspicious long DNS query: {pkt['dns_query'][:30]}...", src_ip)
+            query = pkt['dns_query']
+            # Skip normal reverse DNS lookups
+            if not query.endswith('.in-addr.arpa') and not query.endswith('.ip6.arpa'):
+                self._add_alert(now, 'DNS_TUNNEL',
+                    f"Suspicious long DNS query: {query[:30]}...", src_ip,
+                    cooldown_key=src_ip)
 
         # 2. Unencrypted protocol alerts (FTP, HTTP, POP3, IMAP, SMTP)
         unencrypted = {'FTP', 'HTTP', 'POP3', 'IMAP', 'SMTP'}
@@ -203,25 +217,30 @@ class PacketAnalyzer:
                     f"ICMP flood detected — {len(recent)} ICMP packets in 10s from {src_ip}", src_ip)
                 self._icmp_counts.clear()
 
-        # 6. DNS exfiltration — high entropy or suspicious subdomain patterns
+        # 6. DNS exfiltration — suspicious subdomain patterns
         if 'dns_query' in pkt:
             query = pkt['dns_query']
-            labels = query.split('.')
-            # Check for unusually many subdomains (>5 levels)
-            if len(labels) > 5:
-                self._add_alert(now, 'DNS_EXFIL',
-                    f"Excessive DNS subdomains ({len(labels)} levels): {query[:40]}...", src_ip)
-            # Check for long individual labels (base64-encoded data)
-            for label in labels:
-                if len(label) > 40:
+            # Skip standard reverse DNS lookups (e.g. 1.2.3.4.in-addr.arpa)
+            if not query.endswith('.in-addr.arpa') and not query.endswith('.ip6.arpa'):
+                labels = query.split('.')
+                # Check for unusually many subdomains (>5 levels)
+                if len(labels) > 5:
                     self._add_alert(now, 'DNS_EXFIL',
-                        f"Suspicious long DNS label ({len(label)} chars): {label[:25]}...", src_ip)
-                    break
+                        f"Excessive DNS subdomains ({len(labels)} levels): {query[:40]}...", src_ip,
+                        cooldown_key=query)
+                # Check for long individual labels (base64-encoded data)
+                for label in labels:
+                    if len(label) > 40:
+                        self._add_alert(now, 'DNS_EXFIL',
+                            f"Suspicious long DNS label ({len(label)} chars): {label[:25]}...", src_ip,
+                            cooldown_key=src_ip)
+                        break
 
         # 7. Unusually large packet (possible data exfiltration or attack)
         if pkt_len > self._large_packet_threshold:
             self._add_alert(now, 'LARGE_PKT',
-                f"Unusually large packet ({pkt_len} bytes) {src_ip} → {dst_ip}", src_ip)
+                f"Unusually large packet ({pkt_len} bytes) {src_ip} → {dst_ip}", src_ip,
+                cooldown_key=src_ip)
 
         # 8. Known malicious / suspicious port usage
         suspicious_ports = {
@@ -240,8 +259,11 @@ class PacketAnalyzer:
         }
         for port in (src_port, dst_port):
             if port in suspicious_ports:
-                self._add_alert(now, 'SUSPECT_PORT',
-                    f"Suspicious port {port} ({suspicious_ports[port]}) — {src_ip} ↔ {dst_ip}", src_ip)
+                conn = (src_ip, dst_ip, port)
+                if conn not in self._alerted_connections:
+                    self._alerted_connections.add(conn)
+                    self._add_alert(now, 'SUSPECT_PORT',
+                        f"Suspicious port {port} ({suspicious_ports[port]}) — {src_ip} ↔ {dst_ip}", src_ip)
                 break
 
         # 9. Rapid DNS queries to many unique domains (possible DGA malware)
@@ -262,16 +284,22 @@ class PacketAnalyzer:
                 self._add_alert(now, 'DNS_NON_STD',
                     f"DNS traffic on non-standard port {dst_port} from {src_ip}", src_ip)
 
-        # 11. Database access from external-looking IPs
+        # 11. Database access detection (alerts once per connection pair)
         db_protocols = {'MySQL', 'PostgreSQL'}
         if protocol in db_protocols:
-            self._add_alert(now, 'DB_ACCESS',
-                f"{protocol} traffic detected ({src_ip}:{src_port} → {dst_ip}:{dst_port})", src_ip)
+            conn = ('DB', src_ip, dst_ip)
+            if conn not in self._alerted_connections:
+                self._alerted_connections.add(conn)
+                self._add_alert(now, 'DB_ACCESS',
+                    f"{protocol} traffic detected ({src_ip}:{src_port} → {dst_ip}:{dst_port})", src_ip)
 
-        # 12. RDP exposure detection
+        # 12. RDP exposure detection (alerts once per connection pair)
         if protocol == 'RDP':
-            self._add_alert(now, 'RDP_DETECTED',
-                f"RDP session detected ({src_ip} → {dst_ip}) — verify authorization", src_ip)
+            conn = ('RDP', src_ip, dst_ip)
+            if conn not in self._alerted_connections:
+                self._alerted_connections.add(conn)
+                self._add_alert(now, 'RDP_DETECTED',
+                    f"RDP session detected ({src_ip} → {dst_ip}) — verify authorization", src_ip)
     
     def get_pps(self):
         """Calculate packets per second"""
@@ -321,6 +349,8 @@ class PacketAnalyzer:
         self._syn_tracker.clear()
         self._alerted_scans.clear()
         self._alerted_protocols.clear()
+        self._alert_cooldowns.clear()
+        self._alerted_connections.clear()
         self.flagged_ips.clear()
         
         # Reset log file
@@ -547,6 +577,45 @@ def create_security_alerts(analyzer):
     title = f"🔒 Security Alerts ({alert_count})"
     return Panel(table, title=title, border_style="red")
 
+def create_flagged_ips(analyzer):
+    """Create full-screen flagged IPs panel sorted by alert count"""
+    table = Table(show_header=True, header_style="bold magenta", expand=True,
+                  title="\u26a0\ufe0f Flagged IPs \u2014 Sorted by Alert Count")
+    table.add_column("Rank", style="dim", width=6)
+    table.add_column("IP Address", style="red", width=25)
+    table.add_column("Alerts", justify="right", style="yellow", width=10)
+    table.add_column("Severity", style="bold", width=12)
+    table.add_column("Alert Types", style="cyan", overflow="fold")
+
+    if not analyzer.flagged_ips:
+        return Panel(
+            Text("\u2705 No IPs have been flagged yet", style="green"),
+            title="\u26a0\ufe0f Flagged IPs",
+            border_style="magenta"
+        )
+
+    # Build per-IP alert type summary from recent alerts
+    ip_alert_types = defaultdict(set)
+    for alert in analyzer.alerts:
+        msg = alert['msg']
+        atype = alert['type']
+        # Extract IPs mentioned in the message
+        for ip in analyzer.flagged_ips:
+            if ip in msg:
+                ip_alert_types[ip].add(atype)
+
+    for rank, (ip, count) in enumerate(analyzer.flagged_ips.most_common(50), 1):
+        if count >= 5:
+            severity = Text("HIGH", style="bold red")
+        elif count >= 3:
+            severity = Text("MEDIUM", style="bold yellow")
+        else:
+            severity = Text("LOW", style="dim green")
+        types = ", ".join(sorted(ip_alert_types.get(ip, set()))) or "-"
+        table.add_row(f"{rank}.", ip, str(count), severity, types)
+
+    return Panel(table, title=f"\u26a0\ufe0f Flagged IPs ({len(analyzer.flagged_ips)})", border_style="magenta")
+
 def create_raw_logs(analyzer, expanded=False):
     """Create raw packet logs panel"""
     title = "📋 Raw Packet Logs" + (" [EXPANDED - Press 0 for Overview]" if expanded else "")
@@ -654,6 +723,8 @@ def get_panel_content(panel_name, analyzer):
         return create_security_alerts(analyzer)
     elif panel_name == "logs":
         return create_raw_logs(analyzer, expanded=True)
+    elif panel_name == "flagged_ips":
+        return create_flagged_ips(analyzer)
     else:
         return Panel("Unknown panel", border_style="red")
 
@@ -749,6 +820,10 @@ def update_dashboard(layout, analyzer):
     elif current_view == "logs":
         # Full screen raw logs
         layout["content"].update(create_raw_logs(analyzer, expanded=True))
+    
+    elif current_view == "flagged_ips":
+        # Full screen flagged IPs
+        layout["content"].update(create_flagged_ips(analyzer))
 
 def main():
     parser = argparse.ArgumentParser(description='Packet Sniffer Dashboard')
@@ -767,7 +842,8 @@ def main():
         '4': 'dns', 'n': 'dns', 'N': 'dns',
         '5': 'recent', 'r': 'recent', 'R': 'recent',
         '6': 'alerts', 'a': 'alerts', 'A': 'alerts',
-        '7': 'logs', 'l': 'logs', 'L': 'logs'
+        '7': 'logs', 'l': 'logs', 'L': 'logs',
+        '9': 'flagged_ips',
     }
     
     # Start capture engine
