@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" width="1000" height="400" role="img" aria-labelledby="t d">
+  <title id="t">Dashboard views and keyboard shortcuts</title>
+  <desc id="d">Nine keyboard shortcuts: protocols, top talkers, HTTPS domains, DNS queries, recent packets, security alerts, raw logs, overview and split screen.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#14264a"/></linearGradient></defs>
+  <style>
+    .t{font-family:'Segoe UI',-apple-system,'Helvetica Neue',Arial,sans-serif}
+    .m{font-family:SFMono-Regular,Consolas,Menlo,'DejaVu Sans Mono',monospace}
+  </style>
+  <rect width="1000" height="400" rx="22" fill="url(#bg)"/>
+  <text class="t" x="40" y="44" font-size="13" font-weight="600" letter-spacing="3" fill="#22d3ee">ONE KEY PER VIEW</text>
+  <g class="t" transform="translate(40,70)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#22d3ee" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#22d3ee" fill-opacity=".16" stroke="#22d3ee"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#67e8f9" text-anchor="middle">P</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Protocols</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">live protocol breakdown</text>
+  </g>
+  <g class="t" transform="translate(355,70)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#a78bfa" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#a78bfa" fill-opacity=".16" stroke="#a78bfa"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#c4b5fd" text-anchor="middle">T</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Top talkers</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">ranked by traffic volume</text>
+  </g>
+  <g class="t" transform="translate(670,70)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#34d399" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#34d399" fill-opacity=".16" stroke="#34d399"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#6ee7b7" text-anchor="middle">D</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">HTTPS domains</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">domains seen via TLS SNI</text>
+  </g>
+  <g class="t" transform="translate(40,170)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#fbbf24" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#fbbf24" fill-opacity=".16" stroke="#fbbf24"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#fcd34d" text-anchor="middle">N</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">DNS queries</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">what is resolving, live</text>
+  </g>
+  <g class="t" transform="translate(355,170)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#22d3ee" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#22d3ee" fill-opacity=".16" stroke="#22d3ee"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#67e8f9" text-anchor="middle">R</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Recent packets</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">rolling packet stream</text>
+  </g>
+  <g class="t" transform="translate(670,170)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#f87171" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#f87171" fill-opacity=".16" stroke="#f87171"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#fca5a5" text-anchor="middle">A</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Security alerts</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">DNS tunneling · FTP</text>
+  </g>
+  <g class="t" transform="translate(40,270)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#a78bfa" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#a78bfa" fill-opacity=".16" stroke="#a78bfa"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#c4b5fd" text-anchor="middle">L</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Raw logs</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">press V for a live viewer</text>
+  </g>
+  <g class="t" transform="translate(355,270)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#34d399" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#34d399" fill-opacity=".16" stroke="#34d399"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#6ee7b7" text-anchor="middle">O</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Overview</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">all panels at once</text>
+  </g>
+  <g class="t" transform="translate(670,270)">
+    <rect width="290" height="84" rx="14" fill="#13213f" stroke="#22d3ee" stroke-opacity=".35"/>
+    <rect x="18" y="22" width="40" height="40" rx="9" fill="#22d3ee" fill-opacity=".16" stroke="#22d3ee"/>
+    <text class="m" x="38" y="49" font-size="20" font-weight="700" fill="#67e8f9" text-anchor="middle">S</text>
+    <text x="74" y="38" font-size="17" font-weight="700" fill="#e6edf6">Split screen</text>
+    <text x="74" y="60" font-size="13" fill="#9fb3c8">pick up to 4 panels</text>
+  </g>
+</svg>
