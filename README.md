@@ -21,6 +21,8 @@
 </p>
 
 > **A fast C++ capture engine feeding a beautiful terminal dashboard.** Packet Sniffer classifies live traffic across 17 protocols, extracts HTTPS domains from TLS SNI, watches DNS, and flags suspicious behaviour, all from one keyboard-driven screen.
+<img width="1257" height="697" alt="image" src="https://github.com/user-attachments/assets/ecceedc4-5d41-4f9c-b457-5c9c401d2d31" />
+<img width="1257" height="688" alt="image" src="https://github.com/user-attachments/assets/4c51d1bc-d4c3-41af-a3ae-698fd82b601e" />
 
 ---
 
