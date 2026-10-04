@@ -1,5 +1,3 @@
-# Packet Sniffer
-
 <p align="center">
   <img src="assets/hero.svg" alt="Packet Sniffer: live traffic classification across 17 protocols with a C++ capture engine and a Rich terminal dashboard" width="100%">
 </p>
@@ -19,7 +17,7 @@
 </p>
 
 <p align="center">
-  <b><a href="#-the-idea">Idea</a> · <a href="#-dashboard-views">Views</a> · <a href="#-quick-start">Quick start</a> · <a href="#-how-it-works">How it works</a> · <a href="#-security-detection">Detection</a> · <a href="#-run-it-on-a-raspberry-pi">Raspberry Pi</a> · <a href="#-roadmap">Roadmap</a></b>
+  <b><a href="#-the-idea">Idea</a> · <a href="#-see-it-live">Live</a> · <a href="#-dashboard-views">Views</a> · <a href="#-quick-start">Quick start</a> · <a href="#-how-it-works">How it works</a> · <a href="#-security-detection">Detection</a> · <a href="#-run-it-on-a-raspberry-pi">Raspberry Pi</a> · <a href="#-roadmap">Roadmap</a></b>
 </p>
 
 > **A fast C++ capture engine feeding a beautiful terminal dashboard.** Packet Sniffer classifies live traffic across 17 protocols, extracts HTTPS domains from TLS SNI, watches DNS, and flags suspicious behaviour, all from one keyboard-driven screen.
@@ -33,6 +31,14 @@ Most packet tools make you choose: raw speed with an unreadable firehose, or a p
 A small **C++17 engine on libpcap** does the heavy lifting of capturing and classifying packets. A **Python dashboard built with Rich** turns the stream into live, readable panels you can switch with a single keypress. The two halves talk over plain JSON, so each can be tested, replaced, or extended on its own.
 
 > ⚠️ **Use responsibly.** Only capture traffic on networks you own or are explicitly authorized to monitor.
+
+## 🎬 See it live
+
+<p align="center">
+  <img src="assets/live-dashboard.svg" alt="Animated preview of the terminal dashboard: protocol bars and top talkers moving, DNS queries and recent packets scrolling, security alerts appearing" width="100%">
+</p>
+
+<p align="center"><sub>Illustrative animation of the dashboard layout. Addresses shown use reserved documentation ranges, not real traffic.</sub></p>
 
 ## 🖥️ Dashboard views
 
@@ -67,9 +73,6 @@ A small **C++17 engine on libpcap** does the heavy lifting of capturing and clas
 2. The **C++ capture engine** (`capture_engine.cpp`) parses and classifies each packet across 17 protocols, including TCP, UDP, DNS, and HTTPS, and extracts the TLS SNI.
 3. Results stream as **JSON over stdout/stdin** to the dashboard.
 4. The **Python dashboard** (`dashboard.py`) aggregates the stream into panels, raises alerts, and writes raw logs.
-
-<img width="1257" height="697" alt="image" src="https://github.com/user-attachments/assets/ecceedc4-5d41-4f9c-b457-5c9c401d2d31" />
-<img width="1257" height="688" alt="image" src="https://github.com/user-attachments/assets/4c51d1bc-d4c3-41af-a3ae-698fd82b601e" />
 
 | Component | Language | Responsibility |
 | --- | --- | --- |
@@ -245,4 +248,3 @@ Issues and pull requests are welcome. Please describe your platform and how you 
 Released under the [MIT License](LICENSE). Copyright (c) 2026 Yug Rokadia.
 
 <p align="center"><sub>Built to make network traffic readable. 📡</sub></p>
-
