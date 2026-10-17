@@ -38,8 +38,6 @@ A small **C++17 engine on libpcap** does the heavy lifting of capturing and clas
 <p align="center">
   <img src="https://github.com/YugRokadia/Packet-Sniffer/raw/main/assets/demo.svg" alt="Packet Sniffer dashboard running in an Ubuntu terminal" width="100%">
 </p><p align="center">
-  <img src="https://github.com/YugRokadia/Packet-Sniffer/raw/main/assets/demo.svg" alt="Packet Sniffer dashboard running in an Ubuntu terminal" width="100%">
-</p>
 
 <p align="center"><sub>Illustrative animation of the dashboard layout. Addresses shown use reserved documentation ranges, not real traffic.</sub></p>
 
